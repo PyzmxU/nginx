@@ -501,18 +501,10 @@ ngx_http_dav_mkcol_handler(ngx_http_request_t *r, ngx_http_dav_loc_conf_t *dlcf)
         return NGX_HTTP_UNSUPPORTED_MEDIA_TYPE;
     }
 
-    if (r->uri.data[r->uri.len - 1] != '/') {
-        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                      "MKCOL can create a collection only");
-        return NGX_HTTP_CONFLICT;
-    }
-
     p = ngx_http_map_uri_to_path(r, &path, &root, 0);
     if (p == NULL) {
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
-
-    *(p - 1) = '\0';
 
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
                    "http mkcol path: \"%s\"", path.data);
@@ -634,16 +626,6 @@ destination_done:
         goto invalid_destination;
     }
 
-    if ((r->uri.data[r->uri.len - 1] == '/' && *(last - 1) != '/')
-        || (r->uri.data[r->uri.len - 1] != '/' && *(last - 1) == '/'))
-    {
-        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                      "both URI \"%V\" and \"Destination\" URI \"%V\" "
-                      "should be either collections or non-collections",
-                      &r->uri, &dest->value);
-        return NGX_HTTP_CONFLICT;
-    }
-
     depth = ngx_http_dav_depth(r, NGX_HTTP_DAV_INFINITY_DEPTH);
 
     if (depth != NGX_HTTP_DAV_INFINITY_DEPTH) {
@@ -761,12 +743,6 @@ overwrite_done:
     }
 
     if (ngx_is_dir(&fi)) {
-
-        if (r->uri.data[r->uri.len - 1] != '/') {
-            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                          "\"%V\" is collection", &r->uri);
-            return NGX_HTTP_BAD_REQUEST;
-        }
 
         if (overwrite) {
             ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
